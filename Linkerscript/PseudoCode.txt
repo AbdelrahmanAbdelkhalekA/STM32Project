@@ -1,0 +1,167 @@
+# PSEUDOCODE VIEW OF YOUR LINKER SCRIPT (conceptual, not real syntax)
+# Goal: describe memory, pack sections from all .o files, and create symbols
+# so startup code can copy .data and zero .bss.
+
+# NO load is for not putting anything in flash  (No initial values need to be stored in flash)
+# AT() is like > RAM AT > FLASH
+
+# ------------------------------------------------------------
+# 0) Entry point (where execution begins after reset)
+entry_point = address_of_symbol("Reset_Handler")
+
+# ------------------------------------------------------------
+# 1) Describe physical memory regions on STM32F411
+MEMORY_REGIONS = {
+  FLASH: { origin: 0x08000000, length: 512K, perms: "rx"  },  # non-volatile
+  RAM:   { origin: 0x20000000, length: 128K, perms: "rwx" }   # volatile
+}
+
+# A convenience symbol for top-of-stack:
+_estack = RAM.origin + RAM.length
+
+# Reserve minimum heap/stack sizes (simple placeholder reservation later)
+_Min_Heap_Size  = 0x200
+_Min_Stack_Size = 0x400
+
+# ------------------------------------------------------------
+# 2) Lay out the final program image by output sections
+# The linker collects *input sections* from all object files/libraries like:
+#   main.o(.text), foo.o(.data), libc.a(.rodata), libgcc.a(.glue_7), etc.
+
+# --- FLASH region output layout (what ends up stored in Flash image) ---
+
+# Place interrupt vector table at the start of FLASH
+place_section(".isr_vector", in=FLASH) {
+  align_location(4)
+  keep_all_input_sections_named(".isr_vector")   # MUST NOT be removed
+  align_location(4)
+}
+
+# Place executable code and constants in FLASH
+place_section(".text", in=FLASH) {
+  align_location(4)
+  include_all_input(".text")
+  include_all_input(".text.*")
+  include_all_input(".glue_7")     # interworking stubs if any exist
+  include_all_input(".glue_7t")
+  include_all_input(".rodata")
+  include_all_input(".rodata.*")
+  align_location(4)
+}
+
+# Exception/unwind tables (mostly for C++/unwinding metadata)
+place_section(".ARM.extab", in=FLASH) {
+  align_location(4)
+  include_all_input(".ARM.extab*")
+  include_all_input(".gnu.linkonce.armextab.*")
+  align_location(4)
+}
+
+place_section(".ARM.exidx", in=FLASH) {
+  align_location(4)
+  define_hidden_symbol("__exidx_start", current_location())
+  include_all_input(".ARM.exidx*")
+  include_all_input(".gnu.linkonce.armexidx.*")
+  align_location(4)
+  define_hidden_symbol("__exidx_end", current_location())
+}
+
+# C/C++ initialization arrays (function pointer tables)
+place_section(".init_array", in=FLASH) {
+  define_hidden_symbol("__init_array_start", current_location())
+  keep_sorted_input(".init_array.*")
+  keep_all_input_sections_named(".init_array")
+  define_hidden_symbol("__init_array_end", current_location())
+}
+
+place_section(".fini_array", in=FLASH) {
+  define_hidden_symbol("__fini_array_start", current_location())
+  keep_sorted_input(".fini_array.*")
+  keep_all_input_sections_named(".fini_array")
+  define_hidden_symbol("__fini_array_end", current_location())
+}
+
+place_section(".preinit_array", in=FLASH) {
+  define_hidden_symbol("__preinit_array_start", current_location())
+  keep_all_input_sections_named(".preinit_array")
+  define_hidden_symbol("__preinit_array_end", current_location())
+}
+
+# ------------------------------------------------------------
+# 3) DATA IN RAM, INITIAL BYTES STORED IN FLASH
+# Key concept:
+#   .data VMA = RAM (where it lives while running)
+#   .data LMA = FLASH (where initial bytes live in the firmware image)
+
+# Compute the load address of .data (LMA) AFTER FLASH sections are laid out
+_sidata = load_memory_address_of_section(".data")   # in FLASH image
+
+# Place .data at runtime in RAM, but store its initial bytes at _sidata in FLASH
+place_section(".data", runtime_in=RAM, load_from=FLASH_at(_sidata)) {
+  align_location(4)
+  _sdata = current_location()               # RAM start of .data
+  include_all_input(".data")
+  include_all_input(".data.*")
+  align_location(4)
+  _edata = current_location()               # RAM end of .data
+}
+
+# Startup code uses:
+#   copy bytes from FLASH[_sidata .. _sidata+(.data size)] -> RAM[_sdata .. _edata]
+
+# ------------------------------------------------------------
+# 4) BSS IN RAM, NO BYTES IN FLASH IMAGE (NOLOAD)
+# .bss must be zeroed by startup code; storing zeros in FLASH is wasteful.
+
+place_section(".bss", runtime_in=RAM, no_load_image_bytes=true) {
+  align_location(4)
+  _sbss = current_location()                # RAM start of .bss
+  include_all_input(".bss")
+  include_all_input(".bss.*")
+  include_all_input("COMMON")               # legacy uninitialized globals
+  align_location(4)
+  _ebss = current_location()                # RAM end of .bss
+
+  # conventional heap-end symbols used by some runtimes
+  provide_symbol_if_needed("end", current_location())
+  provide_symbol_if_needed("__end__", current_location())
+}
+
+# Startup code uses:
+#   set RAM[_sbss .. _ebss] = 0
+
+# ------------------------------------------------------------
+# 5) Reserve a minimum heap+stack block in RAM (also NOLOAD)
+place_section("._user_heap_stack", runtime_in=RAM, no_load_image_bytes=true) {
+  align_location(8)
+  provide_symbol_if_needed("__heap_start__", current_location())
+
+  advance_location_by(_Min_Heap_Size)
+  align_location(8)
+  provide_symbol_if_needed("__HeapLimit", current_location())
+
+  advance_location_by(_Min_Stack_Size)
+  align_location(8)
+}
+
+# Note: actual stack pointer starts at _estack (top of RAM); this block is a
+# minimum reservation to keep space available.
+
+# ------------------------------------------------------------
+# 6) Discard unneeded metadata sections to reduce output noise/size
+discard_input_sections([
+  ".comment",
+  ".note*"
+])
+
+# ------------------------------------------------------------
+# 7) Important outputs (symbols) produced for startup/runtime
+#   _estack  : top of RAM (initial SP value)
+#   _sidata  : FLASH address of initial .data bytes
+#   _sdata   : RAM start of .data
+#   _edata   : RAM end of .data
+#   _sbss    : RAM start of .bss
+#   _ebss    : RAM end of .bss
+#   __init_array_start/end, __preinit_array_start/end, etc.
+#
+# Startup code uses those addresses to initialize RAM then call main().

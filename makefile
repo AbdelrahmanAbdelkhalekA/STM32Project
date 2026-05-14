@@ -46,13 +46,13 @@ SRC_FILES += STM32F4xx_DSP_StdPeriph_Lib_V1.9.0/Libraries/STM32F4xx_StdPeriph_Dr
 SRC_FILES += STM32F4xx_DSP_StdPeriph_Lib_V1.9.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rcc.c
 SRC_FILES += STM32F4xx_DSP_StdPeriph_Lib_V1.9.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c
 SRC_FILES += STM32F4xx_DSP_StdPeriph_Lib_V1.9.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_usart.c
-SRC_FILES += FreeRTOS/FreeRTOS/Source/list.c
-SRC_FILES += FreeRTOS/FreeRTOS/Source/tasks.c
-SRC_FILES += FreeRTOS/FreeRTOS/Source/queue.c
-SRC_FILES += FreeRTOS/FreeRTOS/Source/timers.c
-SRC_FILES += FreeRTOS/FreeRTOS/Source/event_groups.c
-SRC_FILES += FreeRTOS/FreeRTOS/Source/stream_buffer.c
-SRC_FILES += FreeRTOS/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+SRC_FILES += FreeRTOS/list.c
+SRC_FILES += FreeRTOS/tasks.c
+SRC_FILES += FreeRTOS/queue.c
+SRC_FILES += FreeRTOS/timers.c
+SRC_FILES += FreeRTOS/event_groups.c
+SRC_FILES += FreeRTOS/stream_buffer.c
+SRC_FILES += FreeRTOS/portable/GCC/ARM_CM4F/port.c
 # SRC_FILES += FreeRTOS/FreeRTOS/Source/portable/MemMang/heap_4.c
 
 
@@ -65,8 +65,8 @@ PROJECT_INCLUDE_DIRECTORIES += Source/Hardware/PWMDriver
 PROJECT_INCLUDE_DIRECTORIES += Source/Hardware/UARTDriver
 PROJECT_INCLUDE_DIRECTORIES += Source/Software/Sensor
 PROJECT_INCLUDE_DIRECTORIES += Source/Software/LCD
-PROJECT_INCLUDE_DIRECTORIES += FreeRTOS/FreeRTOS/Source/include
-PROJECT_INCLUDE_DIRECTORIES += FreeRTOS/FreeRTOS/Source/portable/GCC/ARM_CM4F
+PROJECT_INCLUDE_DIRECTORIES += FreeRTOS/include
+PROJECT_INCLUDE_DIRECTORIES += FreeRTOS/portable/GCC/ARM_CM4F
 
 THIRD_PARTY_INCLUDE_DIRECTORIES := STM32F4xx_DSP_StdPeriph_Lib_V1.9.0/Libraries/CMSIS/Include
 THIRD_PARTY_INCLUDE_DIRECTORIES += STM32F4xx_DSP_StdPeriph_Lib_V1.9.0/Libraries/CMSIS/Device/ST/STM32F4xx/Include

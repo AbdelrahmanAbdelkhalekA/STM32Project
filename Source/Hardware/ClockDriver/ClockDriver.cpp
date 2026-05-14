@@ -1,7 +1,12 @@
 #include "ClockDriver.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_rcc.h"
+#include "FreeRTOSConfig.h"
 #include <cstdio>
+
+extern "C" {
+uint32_t SystemCoreClock = 16000000U;
+}
 
 // ======= Your preferred macro-bit style =======
 // PLL source = HSE (8 MHz)
@@ -102,6 +107,8 @@ void ClockDriver_init(void)
         while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL)
         { /* wait */
         }
+
+        SystemCoreClock = 64000000U;
 
         // Optional: power tidy-up (turn off HSI if unused)
         // RCC->CR &= ~RCC_CR_HSION;

@@ -35,6 +35,9 @@ TARGET_MAP := $(BUILD_DIRECTORY)/$(TARGET_EXEC).map
 
 SRC_FILES := Main.cpp
 SRC_FILES += Source/Hardware/ClockDriver/ClockDriver.cpp
+SRC_FILES += Source/Hardware/GPIOConfigurationDriver/GPIOConfigurationDriver.cpp
+SRC_FILES += Source/Hardware/PWMDriver/PWMDriver.cpp
+SRC_FILES += Source/Hardware/UARTDriver/UARTDriver.cpp
 SRC_FILES += startup.c
 SRC_FILES += STM32F4xx_DSP_StdPeriph_Lib_V1.9.0/Libraries/STM32F4xx_StdPeriph_Driver/src/misc.c
 SRC_FILES += STM32F4xx_DSP_StdPeriph_Lib_V1.9.0/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_flash.c
@@ -50,7 +53,7 @@ SRC_FILES += FreeRTOS/FreeRTOS/Source/timers.c
 SRC_FILES += FreeRTOS/FreeRTOS/Source/event_groups.c
 SRC_FILES += FreeRTOS/FreeRTOS/Source/stream_buffer.c
 SRC_FILES += FreeRTOS/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
-SRC_FILES += FreeRTOS/FreeRTOS/Source/portable/MemMang/heap_4.c
+# SRC_FILES += FreeRTOS/FreeRTOS/Source/portable/MemMang/heap_4.c
 
 
 PROJECT_INCLUDE_DIRECTORIES := .
@@ -58,6 +61,7 @@ PROJECT_INCLUDE_DIRECTORIES += Source/Hardware/ClockDriver
 PROJECT_INCLUDE_DIRECTORIES += Source/Hardware/IWDGDriver
 PROJECT_INCLUDE_DIRECTORIES += Source/Hardware
 PROJECT_INCLUDE_DIRECTORIES += Source/Hardware/GPIOConfigurationDriver
+PROJECT_INCLUDE_DIRECTORIES += Source/Hardware/PWMDriver
 PROJECT_INCLUDE_DIRECTORIES += Source/Hardware/UARTDriver
 PROJECT_INCLUDE_DIRECTORIES += Source/Software/Sensor
 PROJECT_INCLUDE_DIRECTORIES += Source/Software/LCD

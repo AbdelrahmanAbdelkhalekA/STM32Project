@@ -10,7 +10,7 @@ ENABLE_LTO ?= 0
 WERROR ?= 0
 
 ARM_VERSION_TOOLCHAIN ?= gcc-arm-none-eabi-10.3-2021.10
-TOOLCHAIN_DIRECTORY ?= /home/abdelrahman/tools/$(ARM_VERSION_TOOLCHAIN)/bin
+TOOLCHAIN_DIRECTORY ?= /Applications/ARM/bin
 TOOLCHAIN_PREFIX ?= $(TOOLCHAIN_DIRECTORY)/arm-none-eabi-
 
 CC := $(TOOLCHAIN_PREFIX)gcc
